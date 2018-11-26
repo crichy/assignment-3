@@ -1,0 +1,64 @@
+---
+title: "assignment-3"
+author: "Célia Richy"
+date: "23/11/2018"
+output: html_document
+---
+
+##### Question 1:
+```{r}
+acceptability <- devtools::install_github("ewan/stats_course", subdir="data/clark_judgments")
+acceptability_mini <- clarkjudgments::acceptability_mini
+
+#on regarde la distribution des notations en fonction du prédicteur grammatical/ungrammatical
+ggplot2::ggplot(acceptability_mini,
+                ggplot2::aes(x = Sentence,
+                             y = Rating)) +
+  ggplot2::geom_point()
+
+```
+Tout d'abord, quand on regarde le plot, on voit que les scores donnés en fonction du type de phrases sont soit 100 ou très proche de 100 pour les phrases grammaticales, et plutôt entre 0 et 25 pour les phrases agrammaticales. Comme le prédicteur est binaire (soit grammatical, soit non grammatical), on a du mal à voir comment on pourrait avoir des résultats qui reflètent quelque chose de linéaire.
+Ensuite, comme les scores sont bornés entre 0 et 100, la ligne ne pourrait ni monter au dessus de 100 ni descendre sous 0, ce qui est contraire au modèle linéaire, où quand on ajoute ou on enlève au prédicteur un peu de "grammaticalité" on devrait avoir les scores qui changent proportionnellement.
+
+##### Question 2:
+
+```{r}
+#on regarde la standard déviation pour pouvoir l'utiliser dans nos données simulées
+#donc d'abord on crée deux subsets avec les scores pour chaque type de phrase
+sentence_u <- subset(acceptability_mini, Sentence == "Sentence U")
+sentence_g <- subset(acceptability_mini, Sentence == "Sentence G")
+#et on regarde la standard déviation
+sd <- sd(acceptability_mini$Rating)
+print(sd)
+# on regarde aussi la différence entre les moyennes de ces deux types de phrases
+difference_in_means <- mean(sentence_g$Rating) - mean(sentence_u$Rating)
+print(difference_in_means)
+```
+
+Simulation des données: pour chaque sample, on prend le même nombre d'observations, c'est à dire 30
+```{r}
+# on simule d'abord plusieurs samples pour l'hypothèse 1
+sample_1 <- rnorm(30, mean = 0, sd = 43.61646)
+sample_2 <- rnorm(30, mean = 0, sd = 43.61646)
+sample_3 <- rnorm(30, mean = 0, sd = 43.61646)
+sample_4 <- rnorm(30, mean = 0, sd = 43.61646)
+sample_5 <- rnorm(30, mean = 0, sd = 43.61646)
+sample_6 <- rnorm(30, mean = 0, sd = 43.61646)
+sample_7 <- rnorm(30, mean = 0, sd = 43.61646)
+sample_8 <- rnorm(30, mean = 0, sd = 43.61646)
+sample_9 <- rnorm(30, mean = 0, sd = 43.61646)
+sample_10 <- rnorm(30, mean = 0, sd = 43.61646)
+
+# et on simule le même nombre de sample sous l'hypothèse 2
+sample_11 <- rnorm(30, mean = 76.8, sd = 43.61646)
+sample_12 <- rnorm(30, mean = 76.8, sd = 43.61646)
+sample_13 <- rnorm(30, mean = 76.8, sd = 43.61646)
+sample_14 <- rnorm(30, mean = 76.8, sd = 43.61646)
+sample_15 <- rnorm(30, mean = 76.8, sd = 43.61646)
+sample_16 <- rnorm(30, mean = 76.8, sd = 43.61646)
+sample_17 <- rnorm(30, mean = 76.8, sd = 43.61646)
+sample_18 <- rnorm(30, mean = 76.8, sd = 43.61646)
+sample_19 <- rnorm(30, mean = 76.8, sd = 43.61646)
+sample_20 <- rnorm(30, mean = 76.8, sd = 43.61646)
+```
+
