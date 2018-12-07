@@ -7,58 +7,131 @@ output: html_document
 
 ##### Question 1:
 ```{r}
-acceptability <- devtools::install_github("ewan/stats_course", subdir="data/clark_judgments")
-acceptability_mini <- clarkjudgments::acceptability_mini
+devtools::install_github("ewan/stats_course", subdir="data/clark_judgments")
+acceptability <- clarkjudgments::acceptability
+acceptability_filtered <- dplyr::filter(acceptability, MOP == "MOP100")
 
-#on regarde la distribution des notations en fonction du prédicteur grammatical/ungrammatical
-ggplot2::ggplot(acceptability_mini,
-                ggplot2::aes(x = Sentence,
-                             y = Rating)) +
+ggplot2::ggplot(acceptability_filtered,
+                ggplot2::aes(x = language,
+                             y = rating)) +
   ggplot2::geom_point()
-
 ```
-Tout d'abord, quand on regarde le plot, on voit que les scores donnés en fonction du type de phrases sont soit 100 ou très proche de 100 pour les phrases grammaticales, et plutôt entre 0 et 25 pour les phrases agrammaticales. Comme le prédicteur est binaire (soit grammatical, soit non grammatical), on a du mal à voir comment on pourrait avoir des résultats qui reflètent quelque chose de linéaire.
-Ensuite, comme les scores sont bornés entre 0 et 100, la ligne ne pourrait ni monter au dessus de 100 ni descendre sous 0, ce qui est contraire au modèle linéaire, où quand on ajoute ou on enlève au prédicteur un peu de "grammaticalité" on devrait avoir les scores qui changent proportionnellement.
+Quand on regarde le plot, on voit que les scores donnés en fonction du type de phrases sont tous étendus entre 0 et 100, et ce, quelque que soit le type de phrase. Donc en regardant le plot ça n'a pas l'air que ça suit une loi normale donc le modèle gaussien n'a pas l'air le plus approprié. Par ailleurs, comme il s'agit de noter une phrase, les résultats sont forcément limités entre 0 et 100, ce qui n'est pas le meilleur des parametres pour cela
 
 ##### Question 2:
 
+Afin de simuler les nouvelles données, on a besoin de savoir les standard déviations de selon chaque type de grammaticalité, ainsi que les moyennes de ces deux groupes
 ```{r}
-#on regarde la standard déviation pour pouvoir l'utiliser dans nos données simulées
 #donc d'abord on crée deux subsets avec les scores pour chaque type de phrase
-sentence_u <- subset(acceptability_mini, Sentence == "Sentence U")
-sentence_g <- subset(acceptability_mini, Sentence == "Sentence G")
-#et on regarde la standard déviation
-sd <- sd(acceptability_mini$Rating)
-print(sd)
-# on regarde aussi la différence entre les moyennes de ces deux types de phrases
-difference_in_means <- mean(sentence_g$Rating) - mean(sentence_u$Rating)
-print(difference_in_means)
+sentence_bad <- subset(acceptability_filtered, language == "adger-bad")
+sentence_good <- subset(acceptability_filtered, language == "adger-good")
+
+#et on regarde la standard déviation de chaque
+sd_good <- sd(sentence_good$rating)
+sd_bad <- sd(sentence_bad$rating)
+print(sd_good)
+print(sd_bad)
+# on regarde aussi la moyenne du dataset en général pour avoir une bonne moyenne pour l'hypothèse 1
+mean_acceptability_filtered <- mean(acceptability_filtered$rating)
+print(mean_acceptability_filtered)
+# on regarde aussi les moyennes de chaque groupe pour avoir la bonne différence sous l'hypothèse 2
+mean_good <- mean(sentence_good$rating)
+mean_bad <- mean(sentence_bad$rating)
+print(mean_good)
+print(mean_bad)
 ```
 
-Simulation des données: pour chaque sample, on prend le même nombre d'observations, c'est à dire 30
+Simulation des données: on va créer quatre samples qui contiennent 9999 observations chacune.
+Chaque sample correspond à un groupe (grammatical ou agrammatical) sous chaque hypothèse
 ```{r}
-# on simule d'abord plusieurs samples pour l'hypothèse 1
-sample_1 <- rnorm(30, mean = 0, sd = 43.61646)
-sample_2 <- rnorm(30, mean = 0, sd = 43.61646)
-sample_3 <- rnorm(30, mean = 0, sd = 43.61646)
-sample_4 <- rnorm(30, mean = 0, sd = 43.61646)
-sample_5 <- rnorm(30, mean = 0, sd = 43.61646)
-sample_6 <- rnorm(30, mean = 0, sd = 43.61646)
-sample_7 <- rnorm(30, mean = 0, sd = 43.61646)
-sample_8 <- rnorm(30, mean = 0, sd = 43.61646)
-sample_9 <- rnorm(30, mean = 0, sd = 43.61646)
-sample_10 <- rnorm(30, mean = 0, sd = 43.61646)
+#pour avoir les mêmes données simulées à chaque fois on utilise set.seed
+set.seed(1)
+# simulation de deux jeux de données correspondant aux deux groupes 
+grammatical_sentence_hyp_1 <- rnorm(9999, mean = 56, sd = 23.98788)
+ungrammatical_sentence_hyp_1 <- rnorm(9999, mean = 56, sd = 29.38564)
+set.seed(NULL)
 
-# et on simule le même nombre de sample sous l'hypothèse 2
-sample_11 <- rnorm(30, mean = 76.8, sd = 43.61646)
-sample_12 <- rnorm(30, mean = 76.8, sd = 43.61646)
-sample_13 <- rnorm(30, mean = 76.8, sd = 43.61646)
-sample_14 <- rnorm(30, mean = 76.8, sd = 43.61646)
-sample_15 <- rnorm(30, mean = 76.8, sd = 43.61646)
-sample_16 <- rnorm(30, mean = 76.8, sd = 43.61646)
-sample_17 <- rnorm(30, mean = 76.8, sd = 43.61646)
-sample_18 <- rnorm(30, mean = 76.8, sd = 43.61646)
-sample_19 <- rnorm(30, mean = 76.8, sd = 43.61646)
-sample_20 <- rnorm(30, mean = 76.8, sd = 43.61646)
+#on crée un dataset pour chaque groupe avec le prédicteur à gauche et la variable
+#dépendante à droite
+dataset_gram_hyp_1 <- data.frame("language" = "grammatical", 
+                                 "rating" = grammatical_sentence_hyp_1)
+dataset_ungram_hyp_1 <- data.frame("language" = "ungrammatical", 
+                                 "rating" = ungrammatical_sentence_hyp_1)
+#puis on joint les deux datasets.
+dataset_hypothese_1 <- rbind(dataset_gram_hyp_1, dataset_ungram_hyp_1)
+
+set.seed(2)
+# et on simule le même nombre de données sous l'hypothèse 2
+# on utilise les moyennes trouvées pour chaque groupe dans les données observées
+grammatical_sentence_hyp_2 <- rnorm(9999, mean = 86.41548, sd = 23.98788)
+ungrammatical_sentence_hyp_2 <- rnorm(9999, mean = 25.47209, sd = 29.38564)
+set.seed(NULL)
+
+#on crée un dataset pour chaque groupe avec le prédicteur à gauche et la variable
+#dépendante à droite
+dataset_gram_hyp_2 <- data.frame("language" = "grammatical", 
+                                 "rating" = grammatical_sentence_hyp_2)
+dataset_ungram_hyp_2 <- data.frame("language" = "ungrammatical", 
+                                 "rating" = ungrammatical_sentence_hyp_2)
+#puis on joint les deux datasets.
+dataset_hypothese_2 <- rbind(dataset_gram_hyp_2, dataset_ungram_hyp_2)
 ```
+
+Estimation des coefficients:
+```{r}
+linear_modele_1 <- lm(rating ~ language, data = dataset_hypothese_1)
+print(linear_modele_1)
+linear_modele_2 <- lm(rating ~ language, data = dataset_hypothese_2)
+print(linear_modele_2)
+```
+Le premier problème qu'on a c'est qu'il y a forcément des valeurs négatives et des valeurs au dessus de 0, comme on s'attendrait à pouvoir avoir dans une loi normale. Donc les résultats sont forcément éloignés de ce qu'on a avec nos données observée.
+```{r}
+plot(linear_modele_1)
+plot(linear_modele_2)
+```
+Je ne comprends pas ce que peuvent être des simulations qui ressemblent plus aux données observées, sachant qu'on a pris les bonnes moyennes et les mêmes standard déviations.
+
+##### Question 3:
+```{r}
+#pour avoir les mêmes données simulées à chaque fois on utilise set.seed
+set.seed(1)
+# simulation de deux jeux de données correspondant aux deux groupes 
+grammatical_sentence_hyp_1 <- rnorm(3, mean = 56, sd = 23.98788)
+ungrammatical_sentence_hyp_1 <- rnorm(3, mean = 56, sd = 29.38564)
+set.seed(NULL)
+
+#on crée un dataset pour chaque groupe avec le prédicteur à gauche et la variable
+#dépendante à droite
+dataset_gram_hyp_1 <- data.frame("language" = "grammatical", 
+                                 "rating" = grammatical_sentence_hyp_1)
+dataset_ungram_hyp_1 <- data.frame("language" = "ungrammatical", 
+                                 "rating" = ungrammatical_sentence_hyp_1)
+#puis on joint les deux datasets.
+dataset_hypothese_1 <- rbind(dataset_gram_hyp_1, dataset_ungram_hyp_1)
+
+set.seed(2)
+# et on simule le même nombre de données sous l'hypothèse 2
+# on utilise les moyennes trouvées pour chaque groupe dans les données observées
+grammatical_sentence_hyp_2 <- rnorm(3, mean = 86.41548, sd = 23.98788)
+ungrammatical_sentence_hyp_2 <- rnorm(3, mean = 25.47209, sd = 29.38564)
+set.seed(NULL)
+
+#on crée un dataset pour chaque groupe avec le prédicteur à gauche et la variable
+#dépendante à droite
+dataset_gram_hyp_2 <- data.frame("language" = "grammatical", 
+                                 "rating" = grammatical_sentence_hyp_2)
+dataset_ungram_hyp_2 <- data.frame("language" = "ungrammatical", 
+                                 "rating" = ungrammatical_sentence_hyp_2)
+#puis on joint les deux datasets.
+dataset_hypothese_2 <- rbind(dataset_gram_hyp_2, dataset_ungram_hyp_2)
+
+linear_modele_1 <- lm(rating ~ language, data = dataset_hypothese_1)
+print(linear_modele_1)
+linear_modele_2 <- lm(rating ~ language, data = dataset_hypothese_2)
+print(linear_modele_2)
+
+plot(linear_modele_1)
+plot(linear_modele_2)
+```
+
 
